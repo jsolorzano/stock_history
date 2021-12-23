@@ -4,6 +4,11 @@ require_once 'config/conexion.php';
 
 $sql = "SELECT * FROM articulos";
 $result = mysqli_query($conn, $sql);
+
+//~ if(isset($_POST)){
+	//~ echo "<pre>";
+	//~ print_r($_POST);
+//~ }
 ?>
 <html>
 	<head>
@@ -17,7 +22,7 @@ $result = mysqli_query($conn, $sql);
 			<select name="id">
 				<option value="">Todos</option>
 				<?php while($mostrar=mysqli_fetch_array($result)){ ?>
-					<option value="<?php echo $mostrar['id']; ?>" <?php echo (isset($_POST['ver']) && $_POST['id'] == $mostrar['id']) ? 'selected' : ''; ?>>
+					<option value="<?php echo $mostrar['id']; ?>" <?php echo ((isset($_POST['ver']) || isset($_POST['ver_primero']) || isset($_POST['ver_ultimo'])) && $_POST['id'] == $mostrar['id']) ? 'selected' : ''; ?>>
 					<?php echo $mostrar['nombre']; ?>
 					</option>
 				<?php } ?>
@@ -25,6 +30,8 @@ $result = mysqli_query($conn, $sql);
 			<br>
 			<br>
 			<input type="submit" name="ver" value="Ver historial">
+			<input type="submit" name="ver_primero" value="Ver primero">
+			<input type="submit" name="ver_ultimo" value="Ver último">
 		</form>
 		
 		<hr>
@@ -45,14 +52,39 @@ $result = mysqli_query($conn, $sql);
 			</tfoot>
 			<tbody>
 				<?php
-				if(isset($_POST['ver'])){
+				if(isset($_POST['ver']) || isset($_POST['ver_primero']) || isset($_POST['ver_ultimo'])){
 					$id = $_POST['id'];
 					$condicion = "";
-					if($id != ""){
-						$condicion = "WHERE id_producto = ".$id;
+					$limit = "";
+					$order = "DESC";
+					if(isset($_POST['ver'])){
+						if($id != ""){
+							$condicion = "WHERE id_producto = ".$id;
+						}
+					}else if(isset($_POST['ver_primero'])){
+						if($id != ""){
+							$condicion = "WHERE id_producto = ".$id;
+							$limit = "LIMIT 1";
+							$order = "ASC";
+						}else{
+							$limit = "LIMIT 1";
+							$order = "ASC";
+						}
+					}else if(isset($_POST['ver_ultimo'])){
+						if($id != ""){
+							$condicion = "WHERE id_producto = ".$id;
+							$limit = "LIMIT 1";
+							$order = "DESC";
+						}else{
+							$limit = "LIMIT 1";
+							$order = "DESC";
+						}
+					}else{
+						$condicion = "";
+						$limit = "";
 					}
 					$sql2 = "SELECT a.nombre, i_g.cantidad, i_g.creacion FROM ingreso_egreso i_g ".
-					"INNER JOIN articulos a ON a.id = i_g.id_producto ".$condicion." ORDER BY i_g.id DESC";
+					"INNER JOIN articulos a ON a.id = i_g.id_producto ".$condicion." ORDER BY i_g.id ".$order." ".$limit;
 					$result2 = mysqli_query($conn, $sql2);
 					while($mostrar2=mysqli_fetch_array($result2)){
 					?>
